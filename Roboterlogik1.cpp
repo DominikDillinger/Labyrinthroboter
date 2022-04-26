@@ -33,35 +33,30 @@ void Setup() {
             feld[zeile][spalte] = NICHTS;
         }
     }
-    posSpalte = Startposition;
+    posSpalte = AbfrageNachStart();
 }
 
 int AbfrageNachStart() {
     //Abfrage für den Startpunkt (0-4)
+
     int startfeld = 0;
     TextOut(1, LCD_LINE8 , "Startpunkt auswählen", false);
 
-
     while(true){
-    
-                NumOut(1, LCD_LINE6, startfeld);
-                if (ButtonPressed(BTNRIGHT,false) && startfeld < 4){
-                   startfeld += 1;
-                   
-                }else if (ButtonPressed(BTNLEFT, false) && startfeld > 0){
-                   startfeld -= 1;
-                   
-                }else if (ButtonPressed(BTNCENTER, false)){
-                   break;
-                   
-                   }
-                }
-                
+        NumOut(1, LCD_LINE6, startfeld);
+        if (ButtonPressed(BTNRIGHT,false) && startfeld < 4){
+            startfeld += 1;
+        }else if (ButtonPressed(BTNLEFT, false) && startfeld > 0){
+            startfeld -= 1;
+        }else if (ButtonPressed(BTNCENTER, false)){
+            break;
+        }
+    }
+
     TextOut(1, LCD_LINE8, "Vielen Dank", true);
     Wait(2000);
     ResetScreen();
     return startfeld;
-
 }
 
 void Drehen() {
