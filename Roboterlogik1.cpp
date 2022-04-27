@@ -91,6 +91,9 @@ void Fahren() {
 int FahrenMitFeld() {
     //Nach vorne Fahren, neue Position merken und in Feld eintragen.
 
+    //In Feld eintragen.
+    feld[posZeile][posSpalte] = richtung;
+
     Fahren();
 
     //Position Akualisieren.
@@ -110,9 +113,6 @@ int FahrenMitFeld() {
         default:
         break;
     }
-
-    //In Feld eintragen.
-    feld[posZeile][posSpalte] = richtung;
 }
 
 int Exitcheck() {
