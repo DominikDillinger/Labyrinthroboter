@@ -68,7 +68,7 @@ void Drehen() {
 }
 
 void DrehenMitFeld() {
-    //Drehung ausführen und im Feld eintragen.
+    //Drehung ausführen und Richtung anpassen.
 
     Drehen();
 
@@ -78,9 +78,6 @@ void DrehenMitFeld() {
     } else {
         richtung = OBEN;
     }
-
-    //In Feld eintragen.
-    feld[posZeile][posSpalte] = richtung;
 }
 
 void Fahren() {
@@ -92,7 +89,7 @@ void Fahren() {
 }
 
 int FahrenMitFeld() {
-    //Nach vorne Fahren und neue Position merken.
+    //Nach vorne Fahren, neue Position merken und in Feld eintragen.
 
     Fahren();
 
@@ -113,6 +110,9 @@ int FahrenMitFeld() {
         default:
         break;
     }
+
+    //In Feld eintragen.
+    feld[posZeile][posSpalte] = richtung;
 }
 
 int Exitcheck() {
