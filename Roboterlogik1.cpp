@@ -36,23 +36,6 @@ int richtung = OBEN; //Startrichtung
 int posZeile = SIZE-1; //Momentane X-Position vom Roboter.
 int posSpalte; //Momentane Y-Position vom Roboter.
 
-void Setup() {
-    //Settup für drehen und Kordinatennetz.
-
-    //Sensoren setzen.
-    SetSensorLowspeed(SENSOR_VORNE);
-    SetSensorLowspeed(SENSOR_RECHTS);
-    SetSensorLowspeed(SENSOR_LINKS);
-
-    //innit Kordinatennetz, Abfrage nach Startposition.
-    for (int zeile = 0; zeile < SIZE; zeile++){
-        for (int spalte = 0; spalte < SIZE; spalte++) {
-            feld[zeile][spalte] = NICHTS;
-        }
-    }
-    posSpalte = AbfrageNachStart();
-}
-
 int AbfrageNachStart() {
     //Abfrage für den Startpunkt (0-4)
 
@@ -90,11 +73,28 @@ int AbfrageNachStart() {
     return startfeld;
 }
 
+void Setup() {
+    //Settup für drehen und Kordinatennetz.
+
+    //Sensoren setzen.
+    SetSensorLowspeed(SENSOR_VORNE);
+    SetSensorLowspeed(SENSOR_RECHTS);
+    SetSensorLowspeed(SENSOR_LINKS);
+
+    //innit Kordinatennetz, Abfrage nach Startposition.
+    for (int zeile = 0; zeile < SIZE; zeile++){
+        for (int spalte = 0; spalte < SIZE; spalte++) {
+            feld[zeile][spalte] = NICHTS;
+        }
+    }
+    posSpalte = AbfrageNachStart();
+}
+
 void Drehen(int drehwert) {
     //90 Grad Drehung nach rechts durchführen.
 
     //Drehen
-    RotateMotorEX(MOTOREN,  POWER, 180, grad, true, true);
+    RotateMotorEx(MOTOREN, POWER, 180, drehwert, true, true);
 }
 
 void DrehenMitFeld(int drehwert) {
@@ -184,16 +184,14 @@ void Zyklus() {
     } else if (sensorVorne > MINDESTABSTAND) {
         //Gerade aus fahren.
         FahrenMitFeld();
-    } else if (sensorLinks > MINDESTABSTAND)
-    {
+    } else if (sensorLinks > MINDESTABSTAND) {
         //Links abbiegen.
         DrehenMitFeld(LINKS_DREHEN);
         FahrenMitFeld();
-    }
-    {
+    } else {
         //Umdrehen
-        DrehenMitFeld();
-        DrehenMitFeld();
+        DrehenMitFeld(RECHTS_DREHEN);
+        DrehenMitFeld(RECHTS_DREHEN);
         FahrenMitFeld();
     }
 }
