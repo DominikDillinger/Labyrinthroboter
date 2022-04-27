@@ -1,24 +1,40 @@
-//Settins
+/*
+    Code fur den ersten Roboter, der das Labyrinth erkundet und dann einen Weg uber Bluetooth an den zweiten Roboter schickt.
+
+    TODO-Liste:
+    -Ubertragung
+    -Looperkennung(Einfach offene Nachbaren uberschreiben.)
+    -Toleranzen beim Fahren
+*/
+
+//Anschlusse
 #define SENSOR_RECHTS
 #define SENSOR_VORNE
-#define MOTOR_LINKS
-#define MOTOR_RECHTS
+#define SENSOR_LINKS
+#define MOTOREN
+//Settings
 #define MINDESTABSTAND
+#define POWER 50
+#define DISTANCE 360*2.2
+//Defines fur Lesbarkeit.
 #define SIZE 5
 #define NICHTS 0
 #define OBEN 1
 #define RECHTS 2
 #define UNTEN 3
 #define LINKS 4
+#define RECHTS_DREHEN 100
+#define LINKS_DREHEN -100
+
 
 //Vars
 float sensorRechts;
 float sensorVorne;
+float sensorLinks;
 int feld[SIZE][SIZE]; //Zeile, Spalte
 int richtung = OBEN; //Startrichtung
 int posZeile = SIZE-1; //Momentane X-Position vom Roboter.
 int posSpalte; //Momentane Y-Position vom Roboter.
-
 
 void Setup() {
     //Settup für drehen und Kordinatennetz.
@@ -26,6 +42,7 @@ void Setup() {
     //Sensoren setzen.
     SetSensorLowspeed(SENSOR_VORNE);
     SetSensorLowspeed(SENSOR_RECHTS);
+    SetSensorLowspeed(SENSOR_LINKS);
 
     //innit Kordinatennetz, Abfrage nach Startposition.
     for (int zeile = 0; zeile < SIZE; zeile++){
@@ -40,43 +57,64 @@ int AbfrageNachStart() {
     //Abfrage für den Startpunkt (0-4)
 
     int startfeld = 0;
-    TextOut(1, LCD_LINE8 , "Startpunkt auswählen", false);
+    TextOut(16, LCD_LINE1 , "Startpunkt", false);
+    TextOut(16, LCD_LINE2 , "auswaehlen", false);
 
     while(true){
-        NumOut(1, LCD_LINE6, startfeld);
+        NumOut(48, LCD_LINE5, startfeld);
+
+        //INPUT-Eingabe
         if (ButtonPressed(BTNRIGHT,false) && startfeld < 4){
             startfeld += 1;
+            Wait(400);
         }else if (ButtonPressed(BTNLEFT, false) && startfeld > 0){
             startfeld -= 1;
+            Wait(400);
         }else if (ButtonPressed(BTNCENTER, false)){
             break;
         }
+
     }
 
-    TextOut(1, LCD_LINE8, "Vielen Dank", true);
-    Wait(2000);
+    //Ausgabe Bestätigung und CountDown.
+    TextOut(16, LCD_LINE2, "Vielen Dank", true);
+    TextOut(16, LCD_LINE3, "Starte in..", false);
+    for(int i=3; i>=0; i--){
+            NumOut(48, LCD_LINE5 , i);
+            PlayTone(100, 500);
+            Wait(1000);
+    }
+
+    Wait(1000);
     ResetScreen();
     return startfeld;
 }
 
-void Drehen() {
+void Drehen(int drehwert) {
     //90 Grad Drehung nach rechts durchführen.
 
-    //Rechtsdrehen
-    OnFwdSync(OUT_BC, 50, 100);//ACHTUNG: BC bzw 100/-100 richtig belegt?
-    Wait(2000);
+    //Drehen
+    RotateMotorEX(MOTOREN,  POWER, 180, grad, true, true);
 }
 
-void DrehenMitFeld() {
+void DrehenMitFeld(int drehwert) {
     //Drehung ausführen und Richtung anpassen.
 
-    Drehen();
+    Drehen(drehwert);
 
     //Richtung anpassen.
-    if (richtung < 4) {
-        richtung++;
+    if (drehwert == RECHTS_DREHEN) {
+        if (richtung < LINKS) {
+            richtung++;
+        } else {
+            richtung = OBEN;
+        }
     } else {
-        richtung = OBEN;
+        if (richtung > OBEN) {
+            richtung--;
+        } else {
+            richtung = LINKS;
+        }
     }
 }
 
@@ -84,8 +122,7 @@ void Fahren() {
     //Ein Tile nach vorne fahren.
 
     //Vorwärtsfahren
-    OnFwdSync(OUT_BC, 50, 0);
-    Wait(4000);
+    RotateMotorEx(MOTOREN, POWER, DISTANCE, 0, true, true);
 }
 
 int FahrenMitFeld() {
@@ -128,11 +165,9 @@ int Exitcheck() {
 void SensorenAuslesen() {
     //Alle Sensoren Auslesen.
     
-    //TODO
-    /*
-    float sensorRechts;
-    float sensorVorne;
-    */
+    float sensorRechts = SensorUS(SENSOR_RECHTS);
+    float sensorVorne = SensorUS(SENSOR_VORNE);
+    float sensorLinks = SensorUS(SENSOR_LINKS);
 }
 
 void Zyklus() {
@@ -144,12 +179,18 @@ void Zyklus() {
     //Fahren und speichern.
     if (sensorRechts > MINDESTABSTAND) {
         //Rechts abbiegen.
-        DrehenMitFeld();
+        DrehenMitFeld(RECHTS_DREHEN);
         FahrenMitFeld();
     } else if (sensorVorne > MINDESTABSTAND) {
         //Gerade aus fahren.
         FahrenMitFeld();
-    } else {
+    } else if (sensorLinks > MINDESTABSTAND)
+    {
+        //Links abbiegen.
+        DrehenMitFeld(LINKS_DREHEN);
+        FahrenMitFeld();
+    }
+    {
         //Umdrehen
         DrehenMitFeld();
         DrehenMitFeld();
@@ -162,7 +203,7 @@ void ErgbenisUbertragen() {
 }
 
 task Main() {
-    //Setup.
+    //Setup
     Setup();
 
     //Weg finden.
